@@ -737,4 +737,41 @@ class Helper
         return false;
     }
 
+    /**
+     * Get list of views for the authenticated user.
+     *
+     * @author Allan Solis <allanbritos@gmail.com>
+     *
+     * @since 4.7.0
+     *
+     * @return string
+     */
+    public static function userViewsList()
+    {
+        return collect([]);
+    }
+
+    /**
+     * Get list of views for the authenticated user.
+     *
+     * @author Allan Solis <allanbritos@gmail.com>
+     *
+     * @since 4.7.0
+     *
+     * @return string
+     */
+    public static function userViews()
+    {
+        return collect([]);
+    }
+
+    public static function standardFieldsCollection()
+    {
+        return [];
+    }
+
+    public static function customFieldsCollection()
+    {
+        return [];
+    }
 }
