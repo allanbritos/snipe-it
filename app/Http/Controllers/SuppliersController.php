@@ -1,9 +1,21 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Http\Requests\ImageUploadRequest;
+use App\Helpers\Helper;
+use Image;
+use App\Models\AssetMaintenance;
+use Input;
+use Lang;
 use App\Models\Supplier;
-use Illuminate\Support\Facades\Auth;
+use Redirect;
+use App\Models\Setting;
+use Str;
+use View;
+use Auth;
+use Illuminate\Http\Request;
+use App\Http\Requests\ImageUploadRequest;
+
+use Symfony\Component\HttpFoundation\JsonResponse;
 
 /**
  * This controller handles all actions related to Suppliers for
@@ -17,7 +29,6 @@ class SuppliersController extends Controller
      * Show a list of all suppliers
      *
      * @return \Illuminate\Contracts\View\View
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function index()
     {
@@ -33,7 +44,6 @@ class SuppliersController extends Controller
      * Supplier create.
      *
      * @return \Illuminate\Contracts\View\View
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function create()
     {
@@ -45,9 +55,8 @@ class SuppliersController extends Controller
     /**
      * Supplier create form processing.
      *
-     * @param ImageUploadRequest $request
+     * @param Request $request
      * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function store(ImageUploadRequest $request)
     {
@@ -69,8 +78,8 @@ class SuppliersController extends Controller
         $supplier->notes                = request('notes');
         $supplier->url                  = $supplier->addhttp(request('url'));
         $supplier->user_id              = Auth::id();
+        $supplier = $request->handleImages($supplier,600, public_path().'/uploads/suppliers');
 
-        $supplier = $request->handleImages($supplier);
 
         if ($supplier->save()) {
             return redirect()->route('suppliers.index')->with('success', trans('admin/suppliers/message.create.success'));
@@ -81,13 +90,12 @@ class SuppliersController extends Controller
     /**
      * Supplier update.
      *
-     * @param  int $supplierId
+     * @param  int  $supplierId
      * @return \Illuminate\Contracts\View\View
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function edit($supplierId = null)
     {
-        $this->authorize('update', Supplier::class);
+        $this->authorize('edit', Supplier::class);
         // Check if the supplier exists
         if (is_null($item = Supplier::find($supplierId))) {
             // Redirect to the supplier  page
@@ -102,13 +110,12 @@ class SuppliersController extends Controller
     /**
      * Supplier update form processing page.
      *
-     * @param  int $supplierId
+     * @param  int  $supplierId
      * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function update($supplierId = null, ImageUploadRequest $request)
     {
-        $this->authorize('update', Supplier::class);
+        $this->authorize('edit', Supplier::class);
         // Check if the supplier exists
         if (is_null($supplier = Supplier::find($supplierId))) {
             // Redirect to the supplier  page
@@ -129,9 +136,7 @@ class SuppliersController extends Controller
         $supplier->email                = request('email');
         $supplier->url                  = $supplier->addhttp(request('url'));
         $supplier->notes                = request('notes');
-
-        $supplier = $request->handleImages($supplier);
-
+        $supplier = $request->handleImages($supplier,600, public_path().'/uploads/suppliers');
 
         if ($supplier->save()) {
             return redirect()->route('suppliers.index')->with('success', trans('admin/suppliers/message.update.success'));
@@ -144,9 +149,8 @@ class SuppliersController extends Controller
     /**
      * Delete the given supplier.
      *
-     * @param  int $supplierId
+     * @param  int  $supplierId
      * @return \Illuminate\Http\RedirectResponse
-     * @throws \Illuminate\Auth\Access\AuthorizationException
      */
     public function destroy($supplierId)
     {
@@ -191,7 +195,7 @@ class SuppliersController extends Controller
         if (isset($supplier->id)) {
                 return view('suppliers/view', compact('supplier'));
         }
-        // Redirect to the user management page
+
         return redirect()->route('suppliers.index')->with('error', trans('admin/suppliers/message.does_not_exist'));
     }
 

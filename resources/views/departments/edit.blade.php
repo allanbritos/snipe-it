@@ -1,7 +1,9 @@
 @extends('layouts/edit-form', [
     'createText' => trans('admin/departments/table.create') ,
     'updateText' => trans('admin/departments/table.update'),
-    'formAction' => (isset($item->id)) ? route('departments.update', ['department' => $item->id]) : route('departments.store'),
+    'helpTitle' => trans('admin/departments/table.about_locations_title'),
+    'helpText' => trans('admin/departments/table.about_locations'),
+    'formAction' => ($item) ? route('departments.update', ['department' => $item->id]) : route('departments.store'),
 ])
 
 {{-- Page content --}}
@@ -27,8 +29,8 @@
             <label class="col-md-3 control-label" for="image_delete">{{ trans('general.image_delete') }}</label>
             <div class="col-md-5">
                 {{ Form::checkbox('image_delete') }}
-                <img src="{{ Storage::disk('public')->url(app('departments_upload_path').e($item->image)) }}" class="img-responsive" />
-                {!! $errors->first('image_delete', '<span class="alert-msg">:message</span>') !!}
+                <img src="{{ url('/') }}/uploads/departments/{{ $item->image }}" />
+                {!! $errors->first('image_delete', '<span class="alert-msg" aria-hidden="true">:message</span>') !!}
             </div>
         </div>
     @endif

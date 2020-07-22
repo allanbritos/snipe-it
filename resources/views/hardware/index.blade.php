@@ -2,28 +2,28 @@
 
 @section('title0')
 
-  @if ((Request::get('company_id')) && ($company))
+  @if ((Input::get('company_id')) && ($company))
     {{ $company->name }}
   @endif
 
 
 
-@if (Request::get('status'))
-  @if (Request::get('status')=='Pending')
+@if (Input::get('status'))
+  @if (Input::get('status')=='Pending')
     {{ trans('general.pending') }}
-  @elseif (Request::get('status')=='RTD')
+  @elseif (Input::get('status')=='RTD')
     {{ trans('general.ready_to_deploy') }}
-  @elseif (Request::get('status')=='Deployed')
+  @elseif (Input::get('status')=='Deployed')
     {{ trans('general.deployed') }}
-  @elseif (Request::get('status')=='Undeployable')
+  @elseif (Input::get('status')=='Undeployable')
     {{ trans('general.undeployable') }}
-  @elseif (Request::get('status')=='Deployable')
+  @elseif (Input::get('status')=='Deployable')
     {{ trans('general.deployed') }}
-  @elseif (Request::get('status')=='Requestable')
+  @elseif (Input::get('status')=='Requestable')
     {{ trans('admin/hardware/general.requestable') }}
-  @elseif (Request::get('status')=='Archived')
+  @elseif (Input::get('status')=='Archived')
     {{ trans('general.archived') }}
-  @elseif (Request::get('status')=='Deleted')
+  @elseif (Input::get('status')=='Deleted')
     {{ trans('general.deleted') }}
   @endif
 @else
@@ -31,8 +31,8 @@
 @endif
 {{ trans('general.assets') }}
 
-  @if (Request::has('order_number'))
-    : Order #{{ Request::get('order_number') }}
+  @if (Input::has('order_number'))
+    : Order #{{ Input::get('order_number') }}
   @endif
 @stop
 
@@ -44,10 +44,7 @@
 @section('header_right')
   <a href="{{ route('reports/custom') }}" style="margin-right: 5px;" class="btn btn-default">
     Custom Export</a>
-  @can('create', \App\Models\Asset::class)
   <a href="{{ route('hardware.create') }}" class="btn btn-primary pull-right"></i> {{ trans('general.create') }}</a>
-  @endcan
-
 @stop
 
 {{-- Page content --}}
@@ -64,12 +61,13 @@
            'id' => 'bulkForm']) }}
           <div class="row">
             <div class="col-md-12">
-              @if (Request::get('status')!='Deleted')
+              @if (Input::get('status')!='Deleted')
               <div id="toolbar">
-                <select name="bulk_actions" class="form-control select2">
-                  <option value="edit">{{ trans('button.edit') }}</option>
-                  <option value="delete">{{ trans('button.delete') }}</option>
-                  <option value="labels">{{ trans_choice('button.generate_labels', 2) }}</option>
+                <label for="bulk_actions"><span class="sr-only">Bulk Actions</span></label>
+                <select name="bulk_actions" class="form-control select2" aria-label="bulk_actions">
+                  <option value="edit">Edit</option>
+                  <option value="delete">Delete</option>
+                  <option value="labels">Generate Labels</option>
                 </select>
                 <button class="btn btn-primary" id="bulkEdit" disabled>Go</button>
               </div>
@@ -94,12 +92,12 @@
                 id="assetsListingTable"
                 class="table table-striped snipe-table"
                 data-url="{{ route('api.assets.index',
-                    array('status' => e(Request::get('status')),
-                    'order_number'=>e(Request::get('order_number')),
-                    'company_id'=>e(Request::get('company_id')),
-                    'status_id'=>e(Request::get('status_id')))) }}"
+                    array('status' => e(Input::get('status')),
+                    'order_number'=>e(Input::get('order_number')),
+                    'company_id'=>e(Input::get('company_id')),
+                    'status_id'=>e(Input::get('status_id')))) }}"
                 data-export-options='{
-                "fileName": "export{{ (Request::has('status')) ? '-'.str_slug(Request::get('status')) : '' }}-assets-{{ date('Y-m-d') }}",
+                "fileName": "export{{ (Input::has('status')) ? '-'.str_slug(Input::get('status')) : '' }}-assets-{{ date('Y-m-d') }}",
                 "ignoreColumn": ["actions","image","change","checkbox","checkincheckout","icon"]
                 }'>
               </table>

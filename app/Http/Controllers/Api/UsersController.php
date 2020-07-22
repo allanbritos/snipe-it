@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Helpers\Helper;
-use App\Http\Controllers\Controller;
-use App\Http\Requests\SaveUserRequest;
-use App\Http\Transformers\AccessoriesTransformer;
-use App\Http\Transformers\AssetsTransformer;
-use App\Http\Transformers\LicensesTransformer;
-use App\Http\Transformers\SelectlistTransformer;
-use App\Http\Transformers\UsersTransformer;
-use App\Models\Asset;
-use App\Models\Company;
-use App\Models\License;
-use App\Models\User;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use App\Http\Transformers\UsersTransformer;
+use App\Models\Company;
+use App\Models\User;
+use App\Helpers\Helper;
+use App\Http\Requests\SaveUserRequest;
+use App\Models\Asset;
+use App\Http\Transformers\AssetsTransformer;
+use App\Http\Transformers\SelectlistTransformer;
+use App\Http\Transformers\AccessoriesTransformer;
+use App\Http\Transformers\LicensesTransformer;
+use Auth;
 
 class UsersController extends Controller
 {
@@ -76,6 +76,14 @@ class UsersController extends Controller
             $users = $users->where('users.location_id', '=', $request->input('location_id'));
         }
 
+        if ($request->filled('email')) {
+            $users = $users->where('users.email', '=', $request->input('email'));
+        }
+
+        if ($request->filled('username')) {
+            $users = $users->where('users.username', '=', $request->input('username'));
+        }
+
         if ($request->filled('group_id')) {
             $users = $users->ByGroup($request->get('group_id'));
         }
@@ -89,7 +97,10 @@ class UsersController extends Controller
         }
 
         $order = $request->input('order') === 'asc' ? 'asc' : 'desc';
-        $offset = (($users) && (request('offset') > $users->count())) ? 0 : request('offset', 0);
+
+        // Set the offset to the API call's offset, unless the offset is higher than the actual count of items in which
+        // case we override with the actual count, so we should return 0 items.
+        $offset = (($users) && ($request->get('offset') > $users->count())) ? $users->count() : $request->get('offset', 0);
 
         // Check to make sure the limit is not higher than the max allowed
         ((config('app.max_results') >= $request->input('limit')) && ($request->filled('limit'))) ? $limit = $request->input('limit') : $limit = config('app.max_results');
@@ -205,9 +216,19 @@ class UsersController extends Controller
         $user = new User;
         $user->fill($request->all());
 
+        if ($request->has('permissions')) {
+
+            $permissions_array = $request->input('permissions');
+
+            // Strip out the superuser permission if the API user isn't a superadmin
+            if (!Auth::user()->isSuperUser()) {
+                unset($permissions_array['superuser']);
+            }
+            $user->permissions =  $permissions_array;
+        }
+
         $tmp_pass = substr(str_shuffle("0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"), 0, 20);
         $user->password = bcrypt($request->get('password', $tmp_pass));
-
 
         if ($user->save()) {
             if ($request->filled('groups')) {
@@ -231,7 +252,7 @@ class UsersController extends Controller
     public function show($id)
     {
         $this->authorize('view', User::class);
-        $user = User::findOrFail($id);
+        $user = User::withCount('assets as assets_count','licenses as licenses_count','accessories as accessories_count','consumables as consumables_count')->findOrFail($id);
         return (new UsersTransformer)->transformUser($user);
     }
 
@@ -250,16 +271,6 @@ class UsersController extends Controller
         $this->authorize('update', User::class);
 
         $user = User::findOrFail($id);
-
-        // This is a janky hack to prevent people from changing admin demo user data on the public demo.
-        // The $ids 1 and 2 are special since they are seeded as superadmins in the demo seeder.
-        // Thanks, jerks. You are why we can't have nice things. - snipe
-
-        if ((($id == 1) || ($id == 2)) && (config('app.lock_passwords'))) {
-            return response()->json(Helper::formatStandardApiResponse('error', null, 'Permission denied. You cannot update user information via API on the demo.'));
-        }
-
-
         $user->fill($request->all());
 
         if ($user->id == $request->input('manager_id')) {
@@ -269,6 +280,23 @@ class UsersController extends Controller
         if ($request->filled('password')) {
             $user->password = bcrypt($request->input('password'));
         }
+
+        // We need to use has()  instead of filled()
+        // here because we need to overwrite permissions
+        // if someone needs to null them out
+        if ($request->has('permissions')) {
+
+            $permissions_array = $request->input('permissions');
+
+            // Strip out the superuser permission if the API user isn't a superadmin
+            if (!Auth::user()->isSuperUser()) {
+                unset($permissions_array['superuser']);
+            }
+            $user->permissions =  $permissions_array;
+        }
+
+
+
 
         // Update the location of any assets checked out to this user
         Asset::where('assigned_type', User::class)
@@ -328,16 +356,8 @@ class UsersController extends Controller
             return response()->json(Helper::formatStandardApiResponse('error', null,  'This user still has ' . $user->managedLocations()->count() . ' locations that they manage.'));
         }
 
-        if ($user->delete()) {
 
-            // Remove the user's avatar if they have one
-            if (Storage::disk('public')->exists('avatars/'.$user->avatar)) {
-                try  {
-                    Storage::disk('public')->delete('avatars/'.$user->avatar);
-                } catch (\Exception $e) {
-                    \Log::debug($e);
-               }
-            }
+        if ($user->delete()) {
             return response()->json(Helper::formatStandardApiResponse('success', null,  trans('admin/users/message.success.delete')));
         }
         return response()->json(Helper::formatStandardApiResponse('error', null,  trans('admin/users/message.error.delete')));
@@ -394,8 +414,6 @@ class UsersController extends Controller
     }
 
     /**
-
-
      * Reset the user's two-factor status
      *
      * @author [A. Gianotto] [<snipe@snipe.net>]
@@ -433,6 +451,6 @@ class UsersController extends Controller
      */
     public function getCurrentUserInfo(Request $request)
     {
-        return response()->json($request->user());
+        return (new UsersTransformer)->transformUser($request->user());
     }
 }

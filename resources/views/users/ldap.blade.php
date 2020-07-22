@@ -27,17 +27,13 @@ LDAP User Sync
         <div class="box-body">
           <!-- location_id-->
           <div class="form-group {{ $errors->has('location_id') ? 'has-error' : '' }}">
-            
-            <div class="col-xs-12">
-               <!-- Location -->
+              <!-- Location -->
               @include ('partials.forms.edit.location-select', ['translated_name' => trans('general.location'), 'fieldname' => 'location_id'])
+            <div class="col-md-4">
+              <button type="submit" class="btn btn-warning" id="sync">
+                  <i id="sync-button-icon" class="fa fa-refresh icon-white" aria-hidden="true"></i> <span id="sync-button-text">Synchronize</span>
+              </button>
             </div>
-            <div class="col-xs-12 text-center">
-                <button type="submit" class="btn btn-warning" id="sync">
-                    <i id="sync-button-icon" class="fa fa-refresh icon-white"></i> <span id="sync-button-text">Synchronize</span>
-                </button>
-              </div>
-
           </div>
         </div>
       </div>
@@ -47,7 +43,6 @@ LDAP User Sync
     <p>
         {{ trans('admin/users/general.ldap_config_text') }}
     </p>
-  <p><a href="{{ route('settings.ldap.index') }}">LDAP Settings Page</a></p>
   </div>
 </div>
 
@@ -57,7 +52,7 @@ LDAP User Sync
 
     <div class="box box-default">
       <div class="box-header with-border">
-        <h3 class="box-title">Synchronization Results</h3>
+        <h2 class="box-title">Synchronization Results</h2>
       </div><!-- /.box-header -->
       <div class="box-body">
         <table class="table table-bordered">
@@ -68,7 +63,7 @@ LDAP User Sync
           </tr>
 
           @foreach (Session::get('summary') as $entry)
-          <tr {!! ($entry['status']=='SUCCESS') ? 'class="success"' : 'class="danger"' !!}>
+          <tr {!! ($entry['status']=='success') ? 'class="success"' : 'class="danger"' !!}>
               <td>{{ $entry['username'] }}</td>
               <td>{{ $entry['employee_number'] }}</td>
               <td>{{ $entry['firstname'] }}</td>
@@ -78,7 +73,7 @@ LDAP User Sync
                 @if ($entry['status']=='success')
                   <i class="fa fa-check"></i> {!! $entry['note'] !!}
                 @else
-                  <span class="alert-msg">{!! $entry['note'] !!}</span>
+                  <span class="alert-msg" aria-hidden="true">{!! $entry['note'] !!}</span>
                 @endif
 
                 </td>

@@ -5,7 +5,6 @@ namespace App\Http\Requests;
 use App\Models\SnipeModel;
 use Intervention\Image\Facades\Image;
 use enshrined\svgSanitize\Sanitizer;
-use Storage;
 
 class ImageUploadRequest extends Request
 {
@@ -27,8 +26,8 @@ class ImageUploadRequest extends Request
     public function rules()
     {
         return [
-            'image' => 'mimes:png,gif,jpg,jpeg,svg,bmp,svg+xml',
-            'avatar' => 'mimes:png,gif,jpg,jpeg,svg,bmp,svg+xml',
+            'image' => 'mimes:png,gif,jpg,jpeg,svg',
+            'avatar' => 'mimes:png,gif,jpg,jpeg,svg',
         ];
     }
 
@@ -43,7 +42,7 @@ class ImageUploadRequest extends Request
      * @param String $path  location for uploaded images, defaults to uploads/plural of item type.
      * @return SnipeModel        Target asset is being checked out to.
      */
-    public function handleImages($item, $w = 550, $fieldname = 'image', $path = null)
+    public function handleImages($item, $w = 600, $path = null)
     {
 
         $type = strtolower(class_basename(get_class($item)));
@@ -52,56 +51,67 @@ class ImageUploadRequest extends Request
             $path =  str_plural($type);
         }
 
-        \Log::debug('Image path is: '.$path);
-        \Log::debug('Image fieldname is: '.$fieldname);
+        \Log::debug('Trying to upload to '. $path);
 
-
-
-        if ($this->hasFile($fieldname)) {
+        if ($this->hasFile('image')) {
 
             if (!config('app.lock_passwords')) {
 
-                if (!Storage::disk('public')->exists($path)) Storage::disk('public')->makeDirectory($path, 775);
 
-                $image = $this->file($fieldname);
+                if (!is_dir($path)) {
+                    \Log::debug($path.' does not exist');
+                    mkdir($path);
+                }
+
+                $image = $this->file('image');
                 $ext = $image->getClientOriginalExtension();
                 $file_name = $type.'-'.str_random(18).'.'.$ext;
+                \Log::debug('File name will be: '.$file_name);
 
-                if ($image->getClientOriginalExtension()!='svg') {
-
+                if ($image->getClientOriginalExtension()!=='svg') {
+                    \Log::debug('Not an SVG - resize');
+                    \Log::debug('Trying to upload to: '.$path.'/'.$file_name);
                     $upload = Image::make($image->getRealPath())->resize(null, $w, function ($constraint) {
                         $constraint->aspectRatio();
                         $constraint->upsize();
-                    });
-
-                    // This requires a string instead of an object, so we use ($string)
-                    Storage::disk('public')->put($path.'/'.$file_name, (string)$upload->encode());
-
-                // If the file is an SVG, we need to clean it and NOT encode it
+                    })->save($path.'/'.$file_name);
                 } else {
+                    \Log::debug('This is an SVG');
                     $sanitizer = new Sanitizer();
                     $dirtySVG = file_get_contents($image->getRealPath());
                     $cleanSVG = $sanitizer->sanitize($dirtySVG);
-                    Storage::disk('public')->put($path.'/'.$file_name, $cleanSVG);
+
+                    try {
+                        \Log::debug('Trying to upload to: '.$path.'/'.$file_name);
+                        file_put_contents($path.'/'.$file_name, $cleanSVG);
+                    } catch (\Exception $e) {
+                        \Log::debug($e);
+                    }
                 }
 
-                // Remove current image if it exists and we're uploading a new one
-                if (($item->{$fieldname}) && (Storage::disk('public')->exists($path.'/'.$item->{$fieldname}))) {
-                    Storage::disk('public')->delete($path.'/'.$item->{$fieldname});
-                } else {
-                    \Log::debug('Could not delete old file. '.$path.'/'.$item->{$fieldname}.' does not exist?');
+
+                // Remove Current image if exists
+                if (($item->image) && (file_exists($path.'/'.$item->image))) {
+                    try {
+                        unlink($path.'/'.$item->image);
+                    } catch (\Exception $e) {
+                        \Log::debug($e);
+                    }
                 }
 
-                // Assign the new filename as the fieldname
-                $item->{$fieldname} = $file_name;
+                $item->image = $file_name;
             }
 
-        // If the user isn't uploading anything new but wants to delete their old image, do so
         } elseif ($this->input('image_delete')=='1') {
-            Storage::disk('public')->delete($path.'/'.$item->{$fieldname});
-            $item->{$fieldname} = null;
-        }
 
+            try {
+                unlink($path.'/'.$item->image);
+            } catch (\Exception $e) {
+                \Log::debug($e);
+            }
+
+            $item->image = null;
+        }
         return $item;
     }
 }

@@ -6,7 +6,6 @@ use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
 use App\Http\Transformers\LicenseSeatsTransformer;
 use App\Http\Transformers\LicensesTransformer;
-use App\Http\Transformers\SelectlistTransformer;
 use App\Models\Company;
 use App\Models\License;
 use App\Models\LicenseSeat;
@@ -83,7 +82,9 @@ class LicensesController extends Controller
         }
 
 
-        $offset = (($licenses) && (request('offset') > $licenses->count())) ? 0 : request('offset', 0);
+        // Set the offset to the API call's offset, unless the offset is higher than the actual count of items in which
+        // case we override with the actual count, so we should return 0 items.
+        $offset = (($licenses) && ($request->get('offset') > $licenses->count())) ? $licenses->count() : $request->get('offset', 0);
 
         // Check to make sure the limit is not higher than the max allowed
         ((config('app.max_results') >= $request->input('limit')) && ($request->filled('limit'))) ? $limit = $request->input('limit') : $limit = config('app.max_results');
@@ -154,7 +155,7 @@ class LicensesController extends Controller
     public function show($id)
     {
         $this->authorize('view', License::class);
-        $license = License::withCount('freeSeats')->findOrFail($id);
+        $license = License::findOrFail($id);
         $license = $license->load('assignedusers', 'licenseSeats.user', 'licenseSeats.asset');
         return (new LicensesTransformer)->transformLicense($license);
     }
@@ -229,19 +230,21 @@ class LicensesController extends Controller
 
             $this->authorize('view', $license);
 
-            $seats = LicenseSeat::where('license_id', $licenseId)->with('license', 'user', 'asset');
-
-            $offset = (($seats) && (request('offset') > $seats->count())) ? 0 : request('offset', 0);
-
-            $limit = request('limit', 50);
+            $seats = LicenseSeat::where('license_seats.license_id', $licenseId)
+                ->with('license', 'user', 'asset', 'user.department');
 
             $order = $request->input('order') === 'asc' ? 'asc' : 'desc';
-            $total = $seats->count();
 
-            if($total < $offset){
-                $offset = 0;
+            if ($request->input('sort')=='department') {
+                $seats->OrderDepartments($order);
+            } else {
+                $seats->orderBy('id', $order);
             }
 
+            $total = $seats->count();
+            $offset = (($seats) && (request('offset') > $total)) ? 0 : request('offset', 0);
+            $limit = request('limit', 50);
+            
             $seats = $seats->skip($offset)->take($limit)->get();
 
             if ($seats) {
@@ -252,30 +255,6 @@ class LicensesController extends Controller
 
         return response()->json(Helper::formatStandardApiResponse('error', null, trans('admin/licenses/message.does_not_exist')), 200);
 
-    }
-
-    
-    /**
-     * Gets a paginated collection for the select2 menus
-     *
-     * @see \App\Http\Transformers\SelectlistTransformer
-     */
-    public function selectlist(Request $request)
-    {
-
-        $licenses = License::select([
-            'licenses.id',
-            'licenses.name'
-        ]);
-
-        if ($request->filled('search')) {
-            $licenses = $licenses->where('licenses.name', 'LIKE', '%'.$request->get('search').'%');
-        }
-
-        $licenses = $licenses->orderBy('name', 'ASC')->paginate(50);
-
-
-        return (new SelectlistTransformer)->transformSelectlist($licenses);
     }
 
 

@@ -7,13 +7,14 @@
 | department_id       |                  | User ? All                                |
 | item name           | item_name        | All                                       |
 | image               | image            | Asset                                     |
-| department_id       |                  | User ? All                                |
+| email               |                  |                                           |
 | expiration date     | expiration_date  | License                                   |
 | location            | location         | All                                       |
 | notes               | notes            | All                                       |
 | licensed to email   | license_email    | License                                   |
 | licensed to name    | license_name     | License                                   |
 | maintained          | maintained       | License                                   |
+| manager_id          |                  | User                                      |
 | manufacturer        | manufacturer     | All                                       |
 | model name          | asset_model      | Asset                                     |
 | model number        | model_number     | Asset                                     |
@@ -32,6 +33,9 @@
 | warranty months     | warranty_months  | Asset                                     |
 | User Related Fields | assigned_to      | Asset                                     |
 | name                |                  |                                           |
-| email               |                  |                                           |
 | username            |                  |                                           |
+| address             | address          |  User                                     |
+| city                | city             |  User                                     |
+| state               | state            |  User                                     |
+| country             | country          |  User                                     |
 
