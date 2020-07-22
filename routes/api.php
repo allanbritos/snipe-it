@@ -784,4 +784,40 @@ Route::group(['prefix' => 'v1','namespace' => 'Api', 'middleware' => 'api'], fun
 
 
 
+    Route::group([ 'prefix' => 'views' ], function () {
+        Route::get(
+            'datatable',
+            'UserViewsController@dataTable')
+            ->name('api.user_views.datatable');
+
+        Route::get('list/selectlist',
+            [
+                'as' => 'api.fields.viewlist',
+                'uses' => 'UserViewsController@selectlist'
+            ]
+        );
+    });
+
+
+    Route::group(['prefix' => 'fields'], function () {
+        Route::get('list/selectlist',
+            [
+                'as' => 'api.fields.selectlist',
+                'uses' => 'UserViewsController@fieldlist'
+            ]
+        );
+        Route::get('filterhint',
+            [
+                'as' => 'api.fields.filterhint',
+                'uses' => 'UserViewsController@filterhint'
+            ]
+        );
+        Route::get('filterhintColumn',
+            [
+                'as' => 'api.fields.filterhintColumn',
+                'uses' => 'UserViewsController@filterhintColumn'
+            ]
+        );
+    });
+
 });
