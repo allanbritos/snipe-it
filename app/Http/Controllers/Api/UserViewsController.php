@@ -2,19 +2,18 @@
 
 namespace App\Http\Controllers\Api;
 
-//use App\Exports\CustomViewExport;
 use App\Http\Transformers\AssetsTransformer;
 use App\Http\Transformers\SelectlistTransformer;
 use App\Models\Asset;
 use App\Models\Company;
 use App\Models\CustomField;
 use App\Models\Setting;
-use App\UsersViews;
-use App\UserViews;
-//use App\UserViewsDownloads;
+use App\Models\UserViews;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 use stdClass;
 
 class UserViewsController extends Controller
@@ -240,7 +239,7 @@ class UserViewsController extends Controller
 
 
         if ((!is_null($filter)) && (count($filter)) > 0 && !$request->filled('search')) {
-            $assets->ByFilter($filter, $custom_filters, $request_filter);
+            $assets->ByFilterViews($filter, $custom_filters, $request_filter);
             foreach ($custom_filters as $sf) {
                 $assets = $assets->where($sf['field'], $sf['operator'], $sf['value']);
             }
@@ -249,7 +248,7 @@ class UserViewsController extends Controller
 
         } elseif ($request->filled('filter')) {
             if ((!is_null($filter)) && (count($filter)) > 0 && !$request->filled('search')) {
-                $assets->ByFilter($filter, $custom_filters, $request_filter);
+                $assets->ByFilterViews($filter, $custom_filters, $request_filter);
                 foreach ($custom_filters as $sf) {
                     $assets = $assets->where($sf['field'], $sf['operator'], $sf['value']);
                 }
@@ -257,7 +256,7 @@ class UserViewsController extends Controller
             $table_filters = json_decode($request->filter, true);
             foreach ($table_filters as $key => $value) {
                 $filter[] = ['field' => $key, 'operator' => 'LIKE', 'value' => "%$value%", 'label' => $key];
-                $assets->ByFilter($filter, $custom_filters, $request_filter);
+                $assets->ByFilterViews($filter, $custom_filters, $request_filter);
             }
         } else {
             foreach ($custom_filters as $sf) {
@@ -380,7 +379,7 @@ class UserViewsController extends Controller
         return (new SelectlistTransformer)->transformSelectlist($fields);
     }
 
-    public function filterhint(Request $request){
+    public function filterHint(Request $request){
         $field =$request->field;
         $term = $request->term;
         $oper = $request->oper;
@@ -514,56 +513,31 @@ class UserViewsController extends Controller
         $view_list = UserViews::select('name','id')->where('user_id','=',Auth::user()->id)
             ->orderBy('name','asc')
             ->get();
+
         return $view_list;
     }
 
     public static function standardFieldsCollection()
     {
-        $standard_fields = [
-            ['name'=>'accepted','id'=>1000],
-            ['name'=>'archived','id'=>1001],
-            ['name'=>'asset_tag','id'=>1002],
-            ['name'=>'assigned_to','id'=>1003],
-            ['name'=>'assigned_type','id'=>1004],
-            ['name'=>'checkin_counter','id'=>1005],
-            ['name'=>'category_id','id'=>1006],
-            ['name'=>'checkout_counter','id'=>1007],
-            ['name'=>'company_id','id'=>1008],
-            ['name'=>'created_at','id'=>1009],
-            ['name'=>'deleted_at','id'=>1010],
-            ['name'=>'department','id'=>1011],
-            ['name'=>'depreciate','id'=>1012],
-            ['name'=>'expected_checkin','id'=>1013],
-            ['name'=>'id','id'=>1014],
-            ['name'=>'image','id'=>1015],
-            ['name'=>'last_audit_date','id'=>1016],
-            ['name'=>'last_checkout','id'=>1017],
-            ['name'=>'location_id','id'=>1018],
-            ['name'=>'manufacturer_id','id'=>1019],
-            ['name'=>'model_id','id'=>1020],
-            ['name'=>'name','id'=>1021],
-            ['name'=>'next_audit_date','id'=>1022],
-            ['name'=>'notes','id'=>1023],
-            ['name'=>'order_number','id'=>1024],
-            ['name'=>'physical','id'=>1025],
-            ['name'=>'purchase_cost','id'=>1026],
-            ['name'=>'purchase_date','id'=>1027],
-            ['name'=>'requestable','id'=>1028],
-            ['name'=>'requests_counter','id'=>1029],
-            ['name'=>'rtd_location_id','id'=>1030],
-            ['name'=>'serial','id'=>1031],
-            ['name'=>'status_id','id'=>1032],
-            ['name'=>'supplier_id','id'=>1033],
-            ['name'=>'updated_at','id'=>1034],
-            ['name'=>'user_id','id'=>1035],
-            ['name'=>'warranty_months','id'=>1036],
-        ];
+        $asset = new Asset();
+        $columns = $asset->getTableColumns();
+        sort($columns);
+        $standard_fields = [];
+        $id = 1000;
+        foreach ($columns as $column) {
+            if(substr($column,0, 9) !== '_snipeit_') {
+                $standard_fields[] = ['text' => ucwords(str_replace('_',' ',str_replace('_id','',$column))), 'name' => $column, 'id' => $id];
+                $id++;
+            }
+        }
+
         return $standard_fields;
     }
 
     public static function customFieldsCollection()
     {
         $custom_fields = CustomField::orderBy('name','asc')->get();
+
         return $custom_fields;
     }
 }

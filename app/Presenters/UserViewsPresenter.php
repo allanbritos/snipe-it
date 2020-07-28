@@ -3,7 +3,7 @@ namespace App\Presenters;
 
 use App\Http\Controllers\Api\UserViewsController;
 use App\Models\CustomField;
-use App\UserViews;
+use App\Models\UserViews;
 use DateTime;
 
 /**
@@ -154,13 +154,6 @@ class UserViewsPresenter extends  AssetPresenter
                 "switchable" => true,
                 "title" => trans('general.id'),
                 "visible" => false
-            ],[   "raw" => "id",
-                "field" => "id",
-                "searchable" => true,
-                "sortable" => true,
-                "switchable" => true,
-                "title" => trans('general.id'),
-                "visible" => false
             ], [
                 "raw" => "accepted",
                 "field" => "accepted",
@@ -195,7 +188,7 @@ class UserViewsPresenter extends  AssetPresenter
                 "sortable" => true,
                 "title" => trans('admin/hardware/table.asset_tag'),
                 "visible" => true,
-                "formatter" => "assetTagLinkFormatter",
+                "formatter" => "hardwareLinkFormatter",
                 "filterControl" => 'input',
             ], [
                 "raw" => "serial",
@@ -211,7 +204,7 @@ class UserViewsPresenter extends  AssetPresenter
                 "field" => "model",
                 "searchable" => true,
                 "sortable" => true,
-                "title" => trans('admin/hardware/form.model'),
+                "title" => trans('general.asset_model'),
                 "visible" => true,
                 "formatter" => "modelsLinkObjFormatter",
                 "filterControl" => 'input',
@@ -220,14 +213,14 @@ class UserViewsPresenter extends  AssetPresenter
                 "field" => "model_number",
                 "searchable" => true,
                 "sortable" => true,
-                "title" => trans('admin/models/table.modelnumber'),
+                "title" => trans('general.model_no'),
                 "visible" => false
             ],[
                 "raw" => "department",
                 "field" => "department",
                 "searchable" => true,
                 "sortable" => true,
-                "title" => trans('admin/hardware/table.department'),
+                "title" => trans('general.department'),
                 "visible" => true,
                 "filterControl" => 'select',
                 "filterData" => 'url:'.route('api.fields.filterhintColumn',['field'=>'department'])

@@ -149,6 +149,13 @@
                       </a>
                   </li>
                   @endcan
+                  @can('index', \App\Models\Asset::class)
+                      <li {!! (Request::is('views*') ? ' class="active"' : '') !!}>
+                          <a href="{{ url('views') }}">
+                              <i class="fa fa-eye-slash"></i>
+                          </a>
+                      </li>
+                  @endcan
                   @can('view', \App\Models\License::class)
                   <li {!! (Request::is('licenses*') ? ' class="active"' : '') !!}>
                       <a href="{{ route('licenses.index') }}">

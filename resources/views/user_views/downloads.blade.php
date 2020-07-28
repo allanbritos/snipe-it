@@ -74,6 +74,14 @@
 @stop
 
 @push('js')
+
+
+@endpush
+@push('css')
+
+@endpush
+
+@section('moar_scripts')
     <script nonce="{{ csrf_token() }}">
         function downloadFile(file) {
             var url = '{{route('user_views.download',':file')}}';
@@ -81,7 +89,7 @@
             window.location = url;
             $('#dt-processing').html('');
         }
-        $(document).ready(function(){
+        $(function(){
             $('#downloadsTable').bootstrapTable({
                 icons: {
                     advancedSearchIcon: 'fa fa-search-plus',
@@ -95,43 +103,5 @@
             });
         });
     </script>
-
-@endpush
-@push('css')
-    <style>
-        #sortable {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            width: 60%;
-        }
-
-        #sortable li {
-            margin-left: 10px;
-            padding: 5px;
-            height: 30px;
-            cursor: pointer;
-        }
-
-        #sortable li span {
-            padding-left: 5px;
-            padding-right: 10px;
-        }
-        .custom-view-title{
-            position: absolute;
-        }
-        .ui-autocomplete-loading {
-            background: white url({{ URL::asset('img/loading_16x16.gif') }}) right center no-repeat;
-        }
-        .nav-tabs-custom .tab-content{
-            padding:0px;
-        }
-        .select2-results__option div .pull-left{
-            display:none;
-        }
-    </style>
-@endpush
-
-@section('moar_scripts')
-    @include ('partials.bootstrap-table247')
+    @include ('partials.bootstrap-table')
 @stop

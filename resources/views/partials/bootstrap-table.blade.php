@@ -440,6 +440,7 @@
     }
 
     function assetTagLinkFormatter(value, row) {
+        console.log(row);
         if ((row.asset) && (row.asset.id)) {
             return '<a href="{{ url('/') }}/hardware/' + row.asset.id + '"> ' + row.asset.asset_tag + '</a>';
         }

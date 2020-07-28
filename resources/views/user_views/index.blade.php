@@ -31,19 +31,112 @@
 
 {{-- Page content --}}
 @section('content')
+    <style>
+        ._cond[disabled] {
+            border: none;
+            background-color: #efefef;
+            cursor: default;
+        }
+        #sortable {
+            list-style-type: none;
+            margin: 0;
+            padding: 0;
+            width: 60%;
+        }
+
+        #sortable li {
+            margin-left: 10px;
+            padding: 5px;
+            height: 30px;
+            cursor: pointer;
+            background-color: #dfdfdf;
+            border: solid   1px #fff;
+        }
+
+        #sortable li span {
+            padding-left: 5px;
+            padding-right: 10px;
+        }
+        .custom-view-title{
+            position: absolute;
+        }
+        .ui-autocomplete-loading {
+            background: white url({{ URL::asset('img/loading_16x16.gif') }}) right center no-repeat;
+        }
+        .nav-tabs-custom .tab-content{
+            padding:0px;
+        }
+        .select2-results__option div .pull-left{
+            display:none;
+        }
+        .ui-widget {
+            font-family: Arial,Helvetica,sans-serif;
+            font-size: 1em;
+        }
+        .ui-widget .ui-widget {
+            font-size: 1em;
+        }
+        .ui-widget-content {
+            border: 1px solid #dddddd;
+            background: #ffffff;
+            color: #333333;
+        }
+        .ui-front {
+            z-index: 100;
+        }
+        .ui-autocomplete {
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: default;
+        }
+        .ui-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: block;
+            outline: 0;
+        }
+        .ui-menu .ui-menu {
+            position: absolute;
+        }
+        .ui-menu .ui-menu-item {
+            margin: 0;
+            cursor: pointer;
+            /* support: IE10, see #8844 */
+            list-style-image: url("data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7");
+        }
+        .ui-menu .ui-menu-item-wrapper {
+            position: relative;
+            padding: 3px 1em 3px .4em;
+        }
+        .ui-menu .ui-menu-divider {
+            margin: 5px 0;
+            height: 0;
+            font-size: 0;
+            line-height: 0;
+            border-width: 1px 0 0 0;
+        }
+        .ui-menu .ui-state-focus,
+        .ui-menu .ui-state-active {
+            margin: -1px;
+        }
+    </style>
     <div class="box">
         <div class="box-body">
             <div class="row">
-                {{--<div class="list-group hidden-md hidden-sm">
+                <div class="col-md-1">
+                <div class="list-group hidden-md hidden-sm">
                     @php($myViews = \App\Http\Controllers\Api\UserViewsController::userViews())
                     @foreach($myViews as $view)
                         <a onclick="openView('{{$view->id}}','{{$view->name}}')" data-value="{{$view->id}}"
                            class="user-views list-group-item list-group-item-action"> {{$view->name}}</a>
                     @endforeach
-                </div>--}}
+                </div>
+                </div>
 
 
-                <div class="col-md-12" id="maincontent">
+                <div class="col-md-11" id="maincontent">
 
                 </div>
 
@@ -54,6 +147,13 @@
 @stop
 
 @push('js')
+
+@endpush
+@push('css')
+
+@endpush
+
+@section('moar_scripts')
     <script nonce="{{ csrf_token() }}">
         function loadHelp() {
             $.ajax({
@@ -78,7 +178,7 @@
 
         function openView(id = null, name = null, reload = null) {
             $('#select2-user_view-container').text('');
-            window.history.pushState('', '', '{{Request::url()}}?id=' + id);
+            window.history.pushState('', '', '{{ Request::url() }}?id=' + id);
             if (id > 0) {
                 var url = '{{ route('user_views.show',['id'=>':id']) }}';
                 url = url.replace(':id', id);
@@ -96,7 +196,7 @@
         }
 
         function reloadView(id = null) {
-            var url = '<?php echo e(route('user_views.show', ['id' => ':id', 'reload' => true])); ?>';
+            var url = '{{ route('user_views.show', ['id' => ':id', 'reload' => true]) }}';
             url = url.replace(':id', id);
             $.ajax({
                 url: url,
@@ -113,17 +213,16 @@
             var url = '{{route('user_views.generate',['id'=>':id'])}}';
             url = url.replace(':id', id);
             alert('{{ trans('userviews.reportconfirmation') }}')
-            var response = await $.ajax({
+            return await $.ajax({
                 method: "GET",
                 url: url,
                 cache: false,
                 dataType: 'JSON',
             });
-            return response;
         }
 
         function downloadFile(file) {
-            var url = '{{route('user_views.download',':file')}}';
+            var url = '{{ route('user_views.download',':file') }}';
             url = url.replace(':file', file);
             window.location = url;
             $('#dt-processing').html('');
@@ -136,50 +235,8 @@
             else loadHelp();
         });
     </script>
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
 
-@endpush
-@push('css')
-    <style>
-        #sortable {
-            list-style-type: none;
-            margin: 0;
-            padding: 0;
-            width: 90%;
-        }
 
-        #sortable li {
-            margin-left: 10px;
-            padding: 5px;
-
-            cursor: pointer;
-        }
-
-        #sortable li span {
-            padding-left: 5px;
-            padding-right: 10px;
-        }
-
-        .custom-view-title {
-            position: absolute;
-        }
-
-        .ui-autocomplete-loading {
-            background: white url({{ URL::asset('img/loading_16x16.gif') }}) right center no-repeat;
-        }
-
-        .nav-tabs-custom .tab-content {
-            padding: 0px;
-
-        }
-
-        .select2-results__option div .pull-left {
-            display: none;
-        }
-    </style>
-@endpush
-
-@section('moar_scripts')
     @include ('partials.bootstrap-table')
     @include('partials.userviews-table')
 @stop

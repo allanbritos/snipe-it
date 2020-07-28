@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers;
 
-//use App\Exports\CustomViewExport;
+use App\Exports\CustomViewExport;
 use App\Helpers\Helper;
 use App\Http\Transformers\AssetsTransformer;
 use App\Models\Asset;
 use App\Models\Company;
 use App\Models\CustomField;
 use App\Models\Setting;
-use App\UserViews;
-//use App\UserViewsDownloads;
+use App\Models\UserViews;
+use App\Models\UserViewsDownloads;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\View;
+use Maatwebsite\Excel\Facades\Excel;
 
 class UserViewsController extends Controller
 {
@@ -62,6 +63,7 @@ class UserViewsController extends Controller
 
     public function validateForm(Request $request)
     {
+        dd($request->all());
         $name = trim($request->name);
         if($name!="") {
             $exists = UserViews::where('user_id', '=', Auth::user()->id)->where('name', '=', $name)->exists();

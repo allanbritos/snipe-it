@@ -806,13 +806,13 @@ Route::group(['prefix' => 'v1','namespace' => 'Api', 'middleware' => 'api'], fun
                 'uses' => 'UserViewsController@fieldlist'
             ]
         );
-        Route::get('filterhint',
+        Route::get('list/filterhint',
             [
                 'as' => 'api.fields.filterhint',
                 'uses' => 'UserViewsController@filterhint'
             ]
         );
-        Route::get('filterhintColumn',
+        Route::get('list/filterhintColumn',
             [
                 'as' => 'api.fields.filterhintColumn',
                 'uses' => 'UserViewsController@filterhintColumn'

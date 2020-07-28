@@ -1,10 +1,3 @@
-<style>
-    ._cond[disabled] {
-        border: none;
-        background-color: #efefef;
-        cursor: default;
-    }
-</style>
 @if(!isset($userView))
     <h4 class="box-title">
         New Custom View
@@ -14,7 +7,7 @@
     {{ Form::model($userView,['route'=>['user_views.update','id'=>$id],'method'=>'POST','class'=>'form-horizontal has-validation-callback','id'=>'addform','name'=>'addform']) }}
     {{ Form::input('hidden','ajax','ajax',[]) }}
 @else
-    @php($userView = new \App\UserViews())
+    @php($userView = new \App\Models\UserViews())
     {{ Form::open(['route'=>'user_views.store','method'=>'POST','class'=>'form-horizontal has-validation-callback','id'=>'addform','name'=>'addform']) }}
 @endif
 <br/>
@@ -24,7 +17,8 @@
             <label for="name" class="control-label col-md-2"> Name</label>
             <div class="col-md-10">
                 {{ Form::input('text','name',$userView->name,['class'=>'form-control col-md-6 has-feedback','id'=>'name','onchange'=>'validateForm()']) }}
-                <p class="help-block hidden" id="nameError" style="color: red;"><i class="fa fa-question-circle"></i><span id="errorMessage"> </span></p>
+                <p class="help-block hidden" id="nameError" style="color: red;"><i
+                            class="fa fa-question-circle"></i><span id="errorMessage"> </span></p>
             </div>
         </div>
     </div>
@@ -67,15 +61,16 @@
                 </li>
                 <li class="pull-right">
                     @if(isset($userView->id))
-                    <a href="#" class="btn btn-sm btn-primary" onclick="$('#editV').removeClass('active');$('#editTab').removeClass('active');">
-                        <span><i class="fa fa-stop-circle"></i></span>
-                        <span> Cancel</span>
-                    </a>
+                        <a href="#" class="btn btn-sm btn-primary"
+                           onclick="$('#editV').removeClass('active');$('#editTab').removeClass('active');">
+                            <span><i class="fa fa-stop-circle"></i></span>
+                            <span> Cancel</span>
+                        </a>
                     @else
-                    <a href="#" class="btn btn-sm btn-primary" onclick="loadHelp()">
-                        <span><i class="fa fa-stop-circle"></i></span>
-                        <span> Cancel</span>
-                    </a>
+                        <a href="#" class="btn btn-sm btn-primary" onclick="loadHelp()">
+                            <span><i class="fa fa-stop-circle"></i></span>
+                            <span> Cancel</span>
+                        </a>
                     @endif
                 </li>
             </ul>
@@ -90,10 +85,11 @@
 
                         @php($sfields=\App\Http\Controllers\Api\UserViewsController::standardFieldsCollection())
 
-                        <select class="form-control" style="min-width: 300px;" id="sFields1" name="sFields1" multiple size="8">
+                        <select class="form-control" style="min-width: 300px;" id="sFields1" name="sFields1" multiple
+                                size="8">
                             @foreach($sfields as $s)
                                 @if(!in_array($s['name'],$sf))
-                                    <option value="{{$s['name']}}">{{str_replace('_',' ',ucwords($s['name']))}}</option>
+                                    <option value="{{$s['name']}}">{{ $s['text'] }}</option>
                                 @endif
                             @endforeach
 
@@ -105,7 +101,8 @@
                     <div class="col-lg-4 col-md-6 col-sm-12">
                         <p class="help-block"><i class="fa fa-question-circle"></i> Double click a field to remove</p>
                         @php($sfields=\App\Http\Controllers\Api\UserViewsController::standardFieldsCollection())
-                        <select class="form-control" style="min-width: 300px;" id="sFields2" name="sFields2" multiple size="8">
+                        <select class="form-control" style="min-width: 300px;" id="sFields2" name="sFields2" multiple
+                                size="8">
                             @foreach($sf as $key => $value)
                                 <option value="{{$value}}">{{str_replace('_',' ',ucwords($value))}}</option>
                             @endforeach
@@ -122,7 +119,8 @@
                     <div class="col-lg-4 col-md-6 col-sm-12 col-lg-offset-2">
                         <p class="help-block"><i class="fa fa-question-circle"></i> Double click a field to add</p>
                         @php($fields=\App\Http\Controllers\Api\UserViewsController::customFieldsCollection())
-                        <select class="form-control" style="min-width: 300px;" id="lstBox1" name="lstBox1" multiple size="8">
+                        <select class="form-control" style="min-width: 300px;" id="lstBox1" name="lstBox1" multiple
+                                size="8">
                             @foreach($fields as $field)
                                 @if(!in_array($field->id,$cf))
                                     <option value="{{$field->id}}">{{$field->name}}</option>
@@ -135,7 +133,8 @@
                     </div>
                     <div class="col-lg-4 col-md-6 col-sm-12">
                         <p class="help-block"><i class="fa fa-question-circle"></i> Double click a field to remove</p>
-                        <select class="form-control" style="min-width: 300px;" id="lstBox2" name="lstBox2" multiple size="8">
+                        <select class="form-control" style="min-width: 300px;" id="lstBox2" name="lstBox2" multiple
+                                size="8">
                             @foreach($fields as $field)
                                 @if(in_array($field->id,$cf))
                                     <option value="{{$field->id}}">{{$field->name}}</option>
@@ -179,8 +178,9 @@
                         </div>
                         <div class="col-lg-4 col-md-12 col-sm-12">
                             <label class="control-label" for="_condition"> Operator</label>
-                            <select class="form-control" id="_operator" size="9" onchange="operatorHelp($(this).val())">
+                            <select class="form-control" id="_operator" onchange="operatorHelp($(this).val())">
                                 <option value="[Equal]">Equal (=)</option>
+                                <option value="[Greater]">Greater Than (>)</option>
                                 <option value="[Greater]">Greater Than (>)</option>
                                 <option value="[Lesser]">Lesser Than (<)</option>
                                 <option value="[Equal-Greater]">Equal or Greater Than (>=)</option>
@@ -194,10 +194,13 @@
                         <div class="col-lg-4 col-md-12 col-sm-12">
                             <label class="control-label" for="_value"> Value</label>
                             <div class="input-group col-md-12" style="padding-left: 0px;">
-                                <input type="text" id="_value" class="form-control">
+                                <div class="ui-widget">
+                                    <input type="text" id="_value" class="form-control">
+                                </div>
                                 <span class="input-group-addon" style="margin: 0;padding:0">
                                     <a href="#" class="btn btn-sm btn-default btn-group" onclick="saveCondition();"> Add Filter</a>
                                 </span>
+
                             </div>
                             <p class="help-block"><i class="fa fa-question-circle"></i> <span id="helpBlock"></span></p>
                         </div>
@@ -208,32 +211,33 @@
                         <label class="control-label" for="_value"> Filters</label>
                         @foreach($filters as $filter)
                             @if(isset($filter->field))
-                            <div id="_con_{{$filter->field}}" class="input-group input-group-sm">
-                                <input type="text"
-                                       data-oper="{{$filter->operator}}"
-                                       data-field="{{$filter->field}}"
-                                       data-limit="{{$filter->delimiter}}"
-                                       id='_{{$filter->field}}'
-                                       name='_{{$filter->field}}'
-                                       value='{{$filter->label}} {{$filter->delimiter}} {{$filter->value}}'
-                                       class="_cond form-control" readonly>
+                                <div id="_con_{{$filter->field}}" class="input-group input-group-sm">
+                                    <input type="text"
+                                           data-oper="{{$filter->operator}}"
+                                           data-field="{{$filter->field}}"
+                                           data-limit="{{$filter->delimiter}}"
+                                           id='_{{$filter->field}}'
+                                           name='_{{$filter->field}}'
+                                           value='{{$filter->label}} {{$filter->delimiter}} {{$filter->value}}'
+                                           class="_cond form-control" readonly>
                                     <span class="input-group-btn">
-                                            <button type="button" class="btn btn-danger btn-flat" onclick="$('#_con_{{$filter->field}}').remove()" title="Delete">
+                                            <button type="button" class="btn btn-danger btn-flat"
+                                                    onclick="$('#_con_{{$filter->field}}').remove()" title="Delete">
                                                 <i class="fa fa-trash"></i>
                                             </button>
                                     </span>
-                                <script>
-                                    $('#_{{$filter->field}}').on('keypress, keydown', function (event) {
-                                        var $field = $(this);
-                                        if ((event.which !== 37 && (event.which !== 39))
-                                            && ((this.selectionStart < $(`#_${$(this).attr('data-field')}`).val().indexOf(`${$(this).attr('data-oper')}`) + (`${$(this).attr('data-oper')}`).length)
-                                                || ((this.selectionStart == $(`#_${$(this).attr('data-field')}`).val().indexOf(`${$(this).attr('data-oper')}`) + (`${$(this).attr('data-oper')}`).length) && (event.which == 8)))) {
-                                            return false;
-                                        }
-                                    });
-                                </script>
-                                <br/>
-                            </div>
+                                    <script>
+                                        $('#_{{$filter->field}}').on('keypress, keydown', function (event) {
+                                            var $field = $(this);
+                                            if ((event.which !== 37 && (event.which !== 39))
+                                                && ((this.selectionStart < $(`#_${$(this).attr('data-field')}`).val().indexOf(`${$(this).attr('data-oper')}`) + (`${$(this).attr('data-oper')}`).length)
+                                                    || ((this.selectionStart == $(`#_${$(this).attr('data-field')}`).val().indexOf(`${$(this).attr('data-oper')}`) + (`${$(this).attr('data-oper')}`).length) && (event.which == 8)))) {
+                                                return false;
+                                            }
+                                        });
+                                    </script>
+                                    <br/>
+                                </div>
                             @endif
                         @endforeach
                     </div>
@@ -246,7 +250,8 @@
                         <ul id="sortable" class="list-unstyled">
                             @foreach($orders as $order)
                                 @if($order->label!='' && $order->field != 'undefined')
-                                    <li class="ui-state-default" id="_o_{{$order->field}}"><span class="fa fa-ellipsis-v"></span>{{$order->label}}</li>
+                                    <li class="ui-state-default" id="_o_{{$order->field}}"><span
+                                                class="fa fa-ellipsis-v"></span>{{$order->label}}</li>
                                 @endif
                             @endforeach
                         </ul>
@@ -264,7 +269,7 @@
 </div>
 {{ Form::close() }}
 <script type="text/javascript">
-    function changed(){
+    function changed() {
         $('#lblSave').removeClass('fa-check');
         $('#lblSave').addClass('fa-floppy-o');
     }
@@ -277,7 +282,7 @@
         var operator = $('#_operator');
         var value = $('#_value');
         var id;
-        if (!field.val() || !operator.val() || !value.val() || field.val()==='Select a Field') {
+        if (!field.val() || !operator.val() || !value.val() || field.val() === 'Select a Field') {
             alert('Fill all the required fields');
             if (!operator.val()) operator.addClass('required');
             if (!value.val()) value.addClass('required');
@@ -304,7 +309,6 @@
             operator.select(null);
         }
     }
-
 
 
     function addCondition() {
@@ -346,7 +350,7 @@
             placeholder: '',
             allowClear: true,
             ajax: {
-                url:'{{ route('api.fields.selectlist') }}',
+                url: '{{ route('api.fields.selectlist') }}',
                 dataType: 'json',
                 delay: 250,
                 headers: {
@@ -372,7 +376,7 @@
                 },
                 cache: false,
                 error: function (request, status, error) {
-                   console.log(request,status,error);
+                    console.log(request, status, error);
                 }
             },
             escapeMarkup: function (markup) {
@@ -482,13 +486,13 @@
             type: 'JSON',
             data: {name: n.val()},
         }).done(function (data) {
-            if($.parseJSON(data).exists){
+            if ($.parseJSON(data).exists) {
                 var message = $.parseJSON(data).message;
-                    em.text(message);
-                    e.removeClass('hidden')
-                    $('#btnSubmit').addClass('hidden');
-                    n.focus();
-            }else{
+                em.text(message);
+                e.removeClass('hidden')
+                $('#btnSubmit').addClass('hidden');
+                n.focus();
+            } else {
                 e.addClass('hidden')
                 $('#btnSubmit').removeClass('hidden');
             }
@@ -498,19 +502,19 @@
     }
 
 
-    function sortFields(box){
+    function sortFields(box) {
         changed();
         var options = $(`#${box} option`);
-        var arr = options.map(function(_, o) {
+        var arr = options.map(function (_, o) {
             return {
                 t: $(o).text(),
                 v: o.value
             };
         }).get();
-        arr.sort(function(o1, o2) {
+        arr.sort(function (o1, o2) {
             return o1.t > o2.t ? 1 : o1.t < o2.t ? -1 : 0;
         });
-        options.each(function(i, o) {
+        options.each(function (i, o) {
             o.value = arr[i].v;
             $(o).text(arr[i].t);
         });
@@ -672,42 +676,45 @@
             e.preventDefault();
             changed();
         });
-    }(jQuery));
+
+    });
+
+    $(function () {
+        $('._cond').each(function (i, item) {
+            var c = $(item);
+            c.autocomplete({
+                source: function (request, response) {
+                    $.ajax({
+                        url: '{{ route('api.fields.filterhint') }}',
+                        dataType: "json",
+                        headers: {
+                            "X-Requested-With": 'XMLHttpRequest',
+                            "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr('content')
+                        },
+                        data: {
+                            term: request.term,
+                            field: c.attr('name'),
+                            field_t: c.attr('data-field'),
+                            oper: c.attr('data-oper')
+                        },
+                        success: function (data) {
+                            response(data);
+                        }
+                    });
+                },
+                minLength: 2,
+                select: function (event, ui) {
+                    var resp = `${c.attr('data-field')} ${c.attr('data-oper')} ${ui.item.value}`;
+                    $(this).val(resp);
+                    return false;
+                }
+            });
+        });
+    });
 
     $(document).ready(function () {
         initFieldSearch();
         initFilterHint();
-        $(function () {
-            $('._cond').each(function (i, item) {
-                var c = $(item);
-                c.autocomplete({
-                    source: function (request, response) {
-                        $.ajax({
-                            url: '{{ route('api.fields.filterhint') }}',
-                            dataType: "json",
-                            headers: {
-                                "X-Requested-With": 'XMLHttpRequest',
-                                "X-CSRF-TOKEN": $('meta[name="csrf-token"]').attr('content')
-                            },
-                            data: {
-                                term: request.term,
-                                field: c.attr('name'),
-                                field_t: c.attr('data-field'),
-                                oper: c.attr('data-oper')
-                            },
-                            success: function (data) {
-                                response(data);
-                            }
-                        });
-                    },
-                    minLength: 2,
-                    select: function (event, ui) {
-                        var resp = `${c.attr('data-field')} ${c.attr('data-oper')} ${ui.item.value}`;
-                        $(this).val(resp);
-                        return false;
-                    }
-                });
-            });
-        });
+
     });
 </script>
